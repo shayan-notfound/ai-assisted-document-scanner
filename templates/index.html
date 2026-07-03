@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Scanner</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #e0e0e0; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .card { background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; }
+        input[type="file"] { display: none; }
+        .custom-file-upload { background: #007aff; color: white; padding: 12px 24px; border-radius: 8px; display: inline-block; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        button { background: #34c759; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; display: none; }
+        #result { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-top: 25px; text-align: left; white-space: pre-wrap; display: none; border-left: 4px solid #007aff; }
+        .loading { display: none; color: #ff9500; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>AI Document Scanner</h2>
+    <p>Upload an image to extract cleanly formatted text using Gemini.</p>
+    
+    <label for="file-upload" class="custom-file-upload">📸 Take Photo or Choose Image</label>
+    <input id="file-upload" type="file" accept="image/*" onchange="showSubmit()"/>
+    
+    <div id="file-name" style="margin-top: 10px; font-size: 0.9em; color: #aaa;"></div>
+    
+    <button id="upload-btn" onclick="uploadImage()">Scan Document</button>
+    <div id="loading-text" class="loading">⏳ Processing with AI... Please wait.</div>
+</div>
+
+<div id="result"></div>
+
+<script>
+function showSubmit() {
+    const input = document.getElementById('file-upload');
+    if(input.files.length > 0) {
+        document.getElementById('file-name').innerText = input.files[0].name;
+        document.getElementById('upload-btn').style.display = 'block';
+    }
+}
+
+async function uploadImage() {
+    const input = document.getElementById('file-upload');
+    if (input.files.length === 0) return;
+
+    const formData = new FormData();
+    formData.append('image', input.files[0]);
+
+    document.getElementById('upload-btn').style.display = 'none';
+    document.getElementById('loading-text').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+
+    try {
+        const response = await fetch('/scan', { method: 'POST', body: formData });
+        const data = await response.json();
+        
+        document.getElementById('loading-text').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        
+        if (data.text) {
+            resultDiv.innerText = data.text;
+        } else {
+            resultDiv.innerText = "Error: " + (data.error || "Failed to scan image.");
+        }
+    } catch (err) {
+        document.getElementById('loading-text').style.display = 'none';
+        alert("An error occurred connecting to the server.");
+    }
+}
+</script>
+
+</body>
+</html>
+
