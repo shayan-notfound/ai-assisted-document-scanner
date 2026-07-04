@@ -178,7 +178,6 @@
             overflow-y: auto;
         }
 
-        /* Minimalist Subtle Pulse Loading */
         .scanning::after {
             content: '';
             position: absolute;
@@ -214,7 +213,7 @@
                 <i data-lucide="arrow-up-to-line" class="upload-icon" style="width: 32px; height: 32px;"></i>
                 <div class="upload-text">Select Document Image</div>
             </div>
-            <input type="file" id="file-input" name="document" accept="image/*" onchange="previewFile()">
+            <input type="file" id="file-input" name="file" accept="image/*" onchange="previewFile()">
             <div class="preview-container" id="preview-box">
                 <img id="image-preview" class="preview-image" src="" alt="Preview">
             </div>
@@ -281,3 +280,4 @@
 
 </body>
 </html>
+
