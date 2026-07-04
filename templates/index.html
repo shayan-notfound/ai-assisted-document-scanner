@@ -4,73 +4,280 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Document Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #121212; color: #e0e0e0; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .card { background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; }
-        input[type="file"] { display: none; }
-        .custom-file-upload { background: #007aff; color: white; padding: 12px 24px; border-radius: 8px; display: inline-block; cursor: pointer; margin-top: 15px; font-weight: bold; }
-        button { background: #34c759; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; display: none; }
-        #result { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-top: 25px; text-align: left; white-space: pre-wrap; display: none; border-left: 4px solid #007aff; }
-        .loading { display: none; color: #ff9500; margin-top: 15px; font-weight: bold; }
+        :root {
+            --bg-color: #061222;        /* Deepest navy */
+            --card-bg: #123249;         /* Rich dark blue */
+            --accent-btn: #2d5b75;      /* Slate steel blue */
+            --accent-hover: #447794;    /* Lightest slate blue */
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 36px 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 32px;
+        }
+
+        .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: var(--text-main);
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+
+        .upload-area {
+            border-radius: 14px;
+            padding: 40px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            background: rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:active {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .upload-icon {
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .preview-container {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .scan-btn {
+            display: none;
+            width: 100%;
+            background: var(--accent-btn);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .scan-btn:active {
+            background: var(--accent-hover);
+        }
+
+        .result-card {
+            display: none;
+            margin-top: 28px;
+            text-align: left;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            opacity: 0.8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .copy-btn:active {
+            opacity: 1;
+        }
+
+        .result-text {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #e5e7eb;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        /* Minimalist Subtle Pulse Loading */
+        .scanning::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--accent-btn);
+            opacity: 0.15;
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.05; }
+            100% { opacity: 0.25; }
+        }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>AI Document Scanner</h2>
-    <p>Upload an image to extract cleanly formatted text using Gemini.</p>
-    
-    <label for="file-upload" class="custom-file-upload">📸 Take Photo or Choose Image</label>
-    <input id="file-upload" type="file" accept="image/*" onchange="showSubmit()"/>
-    
-    <div id="file-name" style="margin-top: 10px; font-size: 0.9em; color: #aaa;"></div>
-    
-    <button id="upload-btn" onclick="uploadImage()">Scan Document</button>
-    <div id="loading-text" class="loading">⏳ Processing with AI... Please wait.</div>
+<div class="container">
+    <div class="header">
+        <div class="icon-wrapper">
+            <i data-lucide="scan" style="width: 22px; height: 22px;"></i>
+        </div>
+        <h1>AI Document Scanner</h1>
+        <p class="subtitle">Upload any snapshot to cleanly extract structured text using Gemini AI.</p>
+    </div>
+
+    <form id="upload-form" action="/scan" method="POST" enctype="multipart/form-data">
+        <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div class="upload-content">
+                <i data-lucide="arrow-up-to-line" class="upload-icon" style="width: 32px; height: 32px;"></i>
+                <div class="upload-text">Select Document Image</div>
+            </div>
+            <input type="file" id="file-input" name="document" accept="image/*" onchange="previewFile()">
+            <div class="preview-container" id="preview-box">
+                <img id="image-preview" class="preview-image" src="" alt="Preview">
+            </div>
+        </div>
+
+        <button type="submit" class="scan-btn" id="submit-btn">Scan Document</button>
+    </form>
+
+    {% if text_result %}
+    <div class="result-card" style="display: block;">
+        <div class="result-header">
+            <span>Extracted Result</span>
+            <button class="copy-btn" onclick="copyText()">
+                <i data-lucide="copy" style="width: 14px; height: 14px;"></i> Copy
+            </button>
+        </div>
+        <div class="result-text" id="extracted-text">{{ text_result }}</div>
+    </div>
+    {% endif %}
 </div>
 
-<div id="result"></div>
-
 <script>
-function showSubmit() {
-    const input = document.getElementById('file-upload');
-    if(input.files.length > 0) {
-        document.getElementById('file-name').innerText = input.files[0].name;
-        document.getElementById('upload-btn').style.display = 'block';
-    }
-}
+    lucide.createIcons();
 
-async function uploadImage() {
-    const input = document.getElementById('file-upload');
-    if (input.files.length === 0) return;
+    function previewFile() {
+        const file = document.getElementById('file-input').files[0];
+        const previewBox = document.getElementById('preview-box');
+        const previewImg = document.getElementById('image-preview');
+        const submitBtn = document.getElementById('submit-btn');
+        const uploadContent = document.querySelector('.upload-content');
 
-    const formData = new FormData();
-    formData.append('image', input.files[0]);
-
-    document.getElementById('upload-btn').style.display = 'none';
-    document.getElementById('loading-text').style.display = 'block';
-    document.getElementById('result').style.display = 'none';
-
-    try {
-        const response = await fetch('/scan', { method: 'POST', body: formData });
-        const data = await response.json();
-        
-        document.getElementById('loading-text').style.display = 'none';
-        const resultDiv = document.getElementById('result');
-        resultDiv.style.display = 'block';
-        
-        if (data.text) {
-            resultDiv.innerText = data.text;
-        } else {
-            resultDiv.innerText = "Error: " + (data.error || "Failed to scan image.");
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewBox.style.display = 'block';
+                uploadContent.style.display = 'none';
+                submitBtn.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
         }
-    } catch (err) {
-        document.getElementById('loading-text').style.display = 'none';
-        alert("An error occurred connecting to the server.");
     }
-}
+
+    document.getElementById('upload-form').addEventListener('submit', function() {
+        const previewBox = document.getElementById('preview-box');
+        previewBox.classList.add('scanning');
+        const btn = document.getElementById('submit-btn');
+        btn.innerText = "Analyzing text...";
+        btn.style.opacity = "0.6";
+    });
+
+    function copyText() {
+        const text = document.getElementById('extracted-text').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const copyBtn = document.querySelector('.copy-btn');
+            copyBtn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Copied';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i data-lucide="copy" style="width: 14px; height: 14px;"></i> Copy';
+                lucide.createIcons();
+            }, 2000);
+        });
+    }
 </script>
 
 </body>
 </html>
-
